@@ -1,0 +1,68 @@
+name: Build and Deploy to Existing GKE
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  id-token: write   
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # ----------------------------
+    # Checkout source code
+    # ----------------------------
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # ----------------------------
+    # Authenticate to GCP using OIDC
+    # ----------------------------
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: projects/881925804294/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+        service_account: github-gke-sa@pooja31.iam.gserviceaccount.com
+
+    # ----------------------------
+    # Setup gcloud CLI
+    # ----------------------------
+    - name: Set up gcloud
+      uses: google-github-actions/setup-gcloud@v2
+
+    # ----------------------------
+    # Configure Docker for Artifact Registry
+    # ----------------------------
+    - name: Configure Docker
+      run: |
+        gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
+
+    # ----------------------------
+    # Build & Push Docker Image
+    # ----------------------------
+    - name: Build and Push Image
+      run: |
+        docker build -t asia-south1-docker.pkg.dev/pooja31/backend-repo/backend-app:latest .
+        docker push asia-south1-docker.pkg.dev/pooja31/backend-repo/backend-app:latest
+
+    # ----------------------------
+    # Get GKE credentials
+    # ----------------------------
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials gke-secure-gke-primary \
+          --region asia-south1 \
+          --project pooja31
+
+    # ----------------------------
+    # Deploy to GKE
+    # ----------------------------
+    - name: Deploy to Kubernetes
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
