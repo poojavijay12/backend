@@ -55,9 +55,10 @@ jobs:
     # ----------------------------
     - name: Get GKE credentials
       run: |
-        gcloud container clusters get-credentials gke-secure-gke-primary \
-          --region asia-south1 \
-          --project pooja31
+        gcloud container clusters get-credentials secure-gke \
+        --zone asia-south1-a \
+        --project pooja31
+
 
     # ----------------------------
     # Deploy to GKE

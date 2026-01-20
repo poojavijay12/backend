@@ -75,5 +75,6 @@ resource "google_iam_workload_identity_pool_provider" "github_provider" {
 resource "google_service_account_iam_member" "github_oidc_bind" {
   service_account_id = google_service_account.github_sa.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github_pool.name}/attribute.repository/poojavijay12/backend"
+  member="principalSet://iam.googleapis.com/projects/881925804294/locations/global/workloadIdentityPools/github-pool/attribute.repository/poojavijay12/backend"
+
 }
